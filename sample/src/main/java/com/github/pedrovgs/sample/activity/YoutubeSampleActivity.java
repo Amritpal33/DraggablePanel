@@ -17,10 +17,11 @@ package com.github.pedrovgs.sample.activity;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.widget.ImageView;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
 import com.github.pedrovgs.DraggableListener;
 import com.github.pedrovgs.DraggablePanel;
 import com.github.pedrovgs.sample.R;
@@ -28,7 +29,6 @@ import com.github.pedrovgs.sample.fragment.MoviePosterFragment;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
-import com.squareup.picasso.Picasso;
 
 
 /**
@@ -39,16 +39,25 @@ import com.squareup.picasso.Picasso;
 public class YoutubeSampleActivity extends FragmentActivity {
 
     private static final String YOUTUBE_API_KEY = "AIzaSyC1rMU-mkhoyTvBIdTnYU0dss0tU9vtK48";
-    private static final String VIDEO_KEY = "gsjtg7m1MMM";
+    private static final String[] VIDEO_KEYS = new String[]{
+            "XGik29RF4cg",
+            "Ll8j-hjGkIw",
+            "1hiB780Su6U",
+            "Ivhhw0NoQgE",
+            "GSoh3xunjhM",
+            "l3rGxaoTiNI"};
+    private static final String[] VIDEO_LIST = new String[]{
+            "Armin van Buuren - Save My Night (Mark Sixma Remix)",
+            "Paul Oakenfold - Touch Me (Rodg Chill Mix)",
+            "Andrew Rayel - Find Your Harmony 2015",
+            "Karol XVII & MB Valence - Sweet Honey Drops (Radio Edit)",
+            "Andre Sobota - Survivor (Radio Edit)",
+            "Dash Berlin & 3LAU feat. Bright Lights - Somehow (Club Mix)"};
+
     private static final String VIDEO_POSTER_THUMBNAIL = "http://4.bp.blogspot.com/-BT6IshdVsoA/UjfnTo_TkBI/AAAAAAAAMWk/JvDCYCoFRlQ/s1600/xmenDOFP.wobbly.1.jpg";
-    private static final String SECOND_VIDEO_POSTER_THUMBNAIL = "http://media.comicbook.com/wp-content/uploads/2013/07/x-men-days-of-future-past-wolverine-poster.jpg";
     private static final String VIDEO_POSTER_TITLE = "X-Men: Days of Future Past";
 
-    @InjectView(R.id.iv_thumbnail)
-    ImageView thumbnailImageView;
-    @InjectView(R.id.draggable_panel)
-    DraggablePanel draggablePanel;
-
+    private DraggablePanel draggablePanel;
     private YouTubePlayer youtubePlayer;
     private YouTubePlayerSupportFragment youtubeFragment;
 
@@ -61,19 +70,24 @@ public class YoutubeSampleActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_youtube_sample);
-        ButterKnife.inject(this);
+
+        draggablePanel = (DraggablePanel) findViewById(R.id.draggable_panel);
+
+        ListView listView = (ListView) findViewById(R.id.lv_videos);
+        listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, VIDEO_LIST));
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                youtubePlayer.loadVideo(VIDEO_KEYS[position]);
+                draggablePanel.maximize();
+            }
+        });
+
         initializeYoutubeFragment();
         initializeDraggablePanel();
         hookDraggablePanelListeners();
     }
 
-    /**
-     * Method triggered when the iv_thumbnail widget is clicked. This method maximize the DraggablePanel.
-     */
-    @OnClick(R.id.iv_thumbnail)
-    void onContainerClicked() {
-        draggablePanel.maximize();
-    }
 
     /**
      * Initialize the YouTubeSupportFrament attached as top fragment to the DraggablePanel widget and reproduce the
@@ -88,7 +102,7 @@ public class YoutubeSampleActivity extends FragmentActivity {
                     public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer player, boolean wasRestored) {
                         if (!wasRestored) {
                             youtubePlayer = player;
-                            youtubePlayer.loadVideo(VIDEO_KEY);
+                            youtubePlayer.loadVideo(VIDEO_KEYS[0]);
                             youtubePlayer.setShowFullscreenButton(true);
                         }
                     }
@@ -104,6 +118,7 @@ public class YoutubeSampleActivity extends FragmentActivity {
     /**
      * Initialize and configure the DraggablePanel widget with two fragments and some attributes.
      */
+
     private void initializeDraggablePanel() {
         draggablePanel.setFragmentManager(getSupportFragmentManager());
         draggablePanel.setTopFragment(youtubeFragment);
@@ -112,7 +127,7 @@ public class YoutubeSampleActivity extends FragmentActivity {
         moviePosterFragment.setPosterTitle(VIDEO_POSTER_TITLE);
         draggablePanel.setBottomFragment(moviePosterFragment);
         draggablePanel.initializeView();
-        Picasso.with(this).load(SECOND_VIDEO_POSTER_THUMBNAIL).placeholder(R.drawable.xmen_placeholder).into(thumbnailImageView);
+        //Picasso.with(this).load(SECOND_VIDEO_POSTER_THUMBNAIL).placeholder(R.drawable.xmen_placeholder).into(thumbnailImageView);
     }
 
     /**

@@ -8,11 +8,10 @@
 
     <!-- Movie Thumbnail -->
 
-    <ImageView
-            android:id="@+id/iv_thumbnail"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            style="@style/image_view"/>
+    <ListView
+        android:id="@+id/lv_videos"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <!-- DraggablePanel -->
 
