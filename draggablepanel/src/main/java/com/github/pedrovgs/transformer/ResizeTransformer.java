@@ -26,7 +26,9 @@ import android.widget.RelativeLayout;
  */
 class ResizeTransformer extends Transformer {
 
-    private float lastHeight;
+	//this is not needed, I think...
+    private int lastHeight;
+    private int lastWidth;
 
     ResizeTransformer(View view, View parent) {
         super(view, parent);
@@ -40,47 +42,58 @@ class ResizeTransformer extends Transformer {
     @Override
     public void updateWidth(float verticalDragOffset) {
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getView().getLayoutParams();
-        int newWidth = (int) (getOriginalWidth() * (1 - verticalDragOffset / getXScaleFactor()));
-        params.width = newWidth;
-        setLastLeftPosition((int) (getOriginalWidth() - newWidth));
+
+        params.width = (int) (getOriginalWidth() - (getOriginalWidth() - (getOriginalWidth() / getXScaleFactor())) * verticalDragOffset);
+        params.height = (int) (getOriginalHeight() - (getOriginalHeight() - (getOriginalHeight() / getYScaleFactor())) * verticalDragOffset);
+
+        lastHeight = params.height;
+        lastWidth = params.width;
+
         getView().setLayoutParams(params);
     }
 
     /**
-     * Changes view height using view's LayoutParam.
+     * Empty implementation.
      *
      * @param verticalDragOffset used to calculate the new width.
      */
     @Override
     public void updateHeight(float verticalDragOffset) {
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getView().getLayoutParams();
-        int newHeight = (int) (getOriginalHeight() * (1 - verticalDragOffset / getYScaleFactor()));
-        params.height = newHeight;
-        lastHeight = newHeight;
-        getView().setLayoutParams(params);
+        //Empty
     }
 
     /**
      * @return last updated height or the view height if the view hasn't been changed yet.
      */
     @Override
-    public float getViewHeight() {
+    public int getViewHeight() {
         return lastHeight == 0 ? super.getViewHeight() : lastHeight;
+    }
+    /**
+     * @return last updated width or the view height if the view hasn't been changed yet.
+     */
+    @Override
+    public int getViewWidth() {
+        return lastWidth == 0 ? super.getViewWidth() : lastWidth;
     }
 
     /**
-     * Changes X view position using layout() method.
+     * Changes X/Y view position using layout() method.
      *
-     * @param verticalDragOffset used to calculate the new X position.
+     * @param verticalDragOffset used to calculate the new X/Y position.
      */
     @Override
     public void updateXPosition(float verticalDragOffset) {
         int left, top, right, bottom;
-        left = (int) (getOriginalWidth() - getViewWidth());
+
         right = getViewRightPosition(verticalDragOffset);
-        setLastRightPosition(right);
+        left = right-getViewWidth();
         top = getView().getTop();
-        bottom = getView().getBottom();
+        bottom = top+getViewHeight();
+
+        setLastLeftPosition(left);
+        setLastTopPosition(top);
+
         getView().layout(left, top, right, bottom);
     }
 
@@ -146,8 +159,8 @@ class ResizeTransformer extends Transformer {
      * @return
      */
     @Override
-    public int getMinWidth() {
-        return (int) (getOriginalWidth() / getXScaleFactor());
+    public int getMinWidthPlusMargin() {
+        return (int) (getOriginalWidth() / getXScaleFactor()+getMarginRight());
     }
 
     /**

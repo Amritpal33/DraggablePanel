@@ -26,8 +26,8 @@ import android.view.View;
  */
 class DraggableViewCallback extends ViewDragHelper.Callback {
 
-    private static final int MINIMUN_DX_FOR_HORIZONTAL_DRAG = 25;
-    private static final int MINIMUM_DY_FOR_VERTICAL_DRAG = 15;
+    private static final int MIN_DX = 25;
+    private static final int MIN_DY = 15;
     private static final float X_MIN_VELOCITY = 1300;
     private static final float Y_MIN_VELOCITY = 1300;
 
@@ -45,6 +45,13 @@ class DraggableViewCallback extends ViewDragHelper.Callback {
         this.draggedView = draggedView;
     }
 
+
+    @Override
+    public int getViewVerticalDragRange(View child) {
+        return (int) draggableView.getVerticalDragRange();
+    }
+
+
     /**
      * Override method used to apply different scale and alpha effects while the view is being dragged.
      *
@@ -57,6 +64,7 @@ class DraggableViewCallback extends ViewDragHelper.Callback {
     @Override
     public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
         draggableView.updateLastDragViewPosition(top, left);
+
         if (draggableView.isDragViewAtBottom()) {
             draggableView.changeDragViewViewAlpha();
         } else {
@@ -113,7 +121,7 @@ class DraggableViewCallback extends ViewDragHelper.Callback {
     @Override
     public int clampViewPositionHorizontal(View child, int left, int dx) {
         int newLeft = draggedView.getLeft();
-        if ((draggableView.isMinimized() && Math.abs(dx) > MINIMUN_DX_FOR_HORIZONTAL_DRAG) || (draggableView.isDragViewAtBottom() && !draggableView.isDragViewAtRight())) {
+        if ((draggableView.isMinimized() && Math.abs(dx) > MIN_DX) || (draggableView.isDragViewAtBottom() && !draggableView.isDragViewAtRight())) {
             newLeft = left;
         }
         return newLeft;
@@ -131,7 +139,8 @@ class DraggableViewCallback extends ViewDragHelper.Callback {
     @Override
     public int clampViewPositionVertical(View child, int top, int dy) {
         int newTop = draggableView.getHeight() - draggableView.getDraggedViewHeightPlusMarginTop();
-        if (draggableView.isMinimized() && Math.abs(dy) >= MINIMUM_DY_FOR_VERTICAL_DRAG || (!draggableView.isMinimized() && !draggableView.isDragViewAtBottom())) {
+
+        if (draggableView.isMinimized() && Math.abs(dy) >= MIN_DY || (!draggableView.isMinimized() && !draggableView.isDragViewAtBottom())) {
 
             final int topBound = draggableView.getPaddingTop();
             final int bottomBound = draggableView.getHeight() - draggableView.getDraggedViewHeightPlusMarginTop() - draggedView.getPaddingBottom();

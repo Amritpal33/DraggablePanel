@@ -39,7 +39,7 @@ class ScaleTransformer extends Transformer {
      */
     @Override
     public void updateWidth(float verticalDragOffset) {
-        ViewHelper.setScaleX(getView(), 1 - verticalDragOffset / getXScaleFactor());
+        ViewHelper.setScaleX(getView(), 1 - (1 - (1 /  getXScaleFactor())) * verticalDragOffset);
     }
 
     /**
@@ -49,7 +49,7 @@ class ScaleTransformer extends Transformer {
      */
     @Override
     public void updateHeight(float verticalDragOffset) {
-        ViewHelper.setScaleY(getView(), 1 - verticalDragOffset / getYScaleFactor());
+        ViewHelper.setScaleY(getView(), 1 - (1 - (1 /  getYScaleFactor())) * verticalDragOffset);
     }
 
     /**
@@ -118,13 +118,13 @@ class ScaleTransformer extends Transformer {
      * @return min view width.
      */
     @Override
-    public int getMinWidth() {
-        return (int) getOriginalWidth();
+    public int getMinWidthPlusMargin() {
+        return getOriginalWidth();
     }
-
+/*
     @Override
     public int getLastLeftPosition() {
         return 0;
     }
-
+*/
 }

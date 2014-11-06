@@ -26,6 +26,7 @@ import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.RelativeLayout;
 
 import com.github.pedrovgs.transformer.Transformer;
@@ -42,7 +43,7 @@ public class DraggableView extends RelativeLayout {
 
     private static final int DEFAULT_SCALE_FACTOR = 2;
     private static final int DEFAULT_TOP_VIEW_MARGIN = 30;
-    private static final float DEFAULT_TOP_VIEW_HEIGHT = -1;
+    private static final int DEFAULT_TOP_VIEW_HEIGHT = -1;
     private static final float SLIDE_TOP = 0f;
     private static final float SLIDE_BOTTOM = 1f;
     private static final boolean DEFAULT_ENABLE_HORIZONTAL_ALPHA_EFFECT = true;
@@ -165,6 +166,7 @@ public class DraggableView extends RelativeLayout {
      * Maximize the custom view applying an animation to return the view to the initial position.
      */
     public void maximize() {
+        setVisibility(VISIBLE);
         smoothSlideTo(SLIDE_TOP);
         notifyMaximizeToListener();
     }
@@ -195,6 +197,15 @@ public class DraggableView extends RelativeLayout {
             ViewCompat.postInvalidateOnAnimation(this);
             notifyCloseToLeftListener();
         }
+    }
+
+    /**
+     * Alternative to View.isShown() but without checking parent
+     *
+     * @return boolean
+     */
+    public boolean isVisible(){
+        return getVisibility() == VISIBLE;
     }
 
     /**
@@ -306,11 +317,17 @@ public class DraggableView extends RelativeLayout {
      */
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        int newTop = (int) transformer.getViewHeight();
+        // Now Android Studio Layout Preview work fine for DraggableView
+        if(transformer == null) {
+            super.onLayout(changed, left, top, right, bottom);
+            return;
+        }
+
         int lastTopPosition = transformer.getLastTopPosition();
         int lastLeftPosition = transformer.getLastLeftPosition();
-        int newRight = transformer.getLastRightPosition();
-        int newBottom = lastTopPosition + newTop;
+        int newRight = lastLeftPosition+transformer.getViewWidth(); // There was bug when dragging horizontally (right was always the same)
+        int newBottom = lastTopPosition + transformer.getViewHeight();
+
         dragView.layout(lastLeftPosition, lastTopPosition, newRight, newBottom);
         secondView.layout(0, newBottom, right, lastTopPosition + bottom);
     }
@@ -328,7 +345,6 @@ public class DraggableView extends RelativeLayout {
             attributes.recycle();
             initializeViewDragHelper();
         }
-
     }
 
     private void mapGUI(TypedArray attributes) {
@@ -336,6 +352,16 @@ public class DraggableView extends RelativeLayout {
         int secondViewId = attributes.getResourceId(R.styleable.draggable_view_bottom_view_id, R.id.second_view);
         dragView = findViewById(dragViewId);
         secondView = findViewById(secondViewId);
+
+        // change secondView position on dragView layout changes
+        ViewTreeObserver observer = dragView.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                changeSecondViewPosition();
+            }
+        });
+
     }
 
     /**
@@ -367,6 +393,36 @@ public class DraggableView extends RelativeLayout {
     }
 
     /**
+     * Reset original dimensions od dragView
+     * I use it when orientation changes
+     *
+     *
+     * @param topViewHeight new dragView Height
+     */
+    public void reset(int topViewHeight) {
+        reset(topViewHeight, getWidth());
+    }
+
+    /**
+     *
+     * @param topViewHeight new dragView Height
+     * @param topViewWidth new dragView Width
+     */
+    public void reset(int topViewHeight, int topViewWidth) {
+        transformer.setOriginalWidth(topViewWidth);
+        transformer.setViewHeight(topViewHeight);
+
+        if (isVisible() && !isClosed()) {
+            if (isMaximized()) {
+                changeDragViewScale(SLIDE_TOP);
+                changeDragViewPosition(SLIDE_TOP);
+            } else {
+                smoothSlideTo(SLIDE_BOTTOM);
+            }
+        }
+    }
+
+    /**
      * Update the last top and left position when the view is dragged. This last positions are used to recreate the
      * dragged view and secondView positions if the requestLayout method is called.
      *
@@ -383,8 +439,12 @@ public class DraggableView extends RelativeLayout {
      * the view is dragged.
      */
     void changeDragViewPosition() {
-        transformer.updateXPosition(getVerticalDragOffset());
-        transformer.updateYPosition(getVerticalDragOffset());
+        changeDragViewPosition(getVerticalDragOffset());
+    }
+
+    void changeDragViewPosition(float offset) {
+        transformer.updateXPosition(offset);
+        transformer.updateYPosition(offset);
     }
 
     /**
@@ -398,8 +458,12 @@ public class DraggableView extends RelativeLayout {
      * Modify dragged view scale based on the dragged view vertical position and the scale factor.
      */
     void changeDragViewScale() {
-        transformer.updateWidth(getVerticalDragOffset());
-        transformer.updateHeight(getVerticalDragOffset());
+        changeDragViewScale(getVerticalDragOffset());
+    }
+
+    void changeDragViewScale(float offset) {
+        transformer.updateWidth(offset);
+        transformer.updateHeight(offset);
     }
 
     /**
@@ -572,8 +636,9 @@ public class DraggableView extends RelativeLayout {
      */
     private boolean smoothSlideTo(float slideOffset) {
         final int topBound = getPaddingTop();
-        int x = (int) (slideOffset * (getWidth() - transformer.getMinWidth()));
+        int x = (int) (slideOffset * (getWidth() - transformer.getMinWidthPlusMargin()));
         int y = (int) (topBound + slideOffset * getVerticalDragRange());
+
         if (viewDragHelper.smoothSlideViewTo(dragView, x, y)) {
             ViewCompat.postInvalidateOnAnimation(this);
             return true;
@@ -618,8 +683,8 @@ public class DraggableView extends RelativeLayout {
      *
      * @return the difference between the custom view height and the dragged view height.
      */
-    private float getVerticalDragRange() {
-        return getHeight() - transformer.getMinHeightPlusMargin();
+    public float getVerticalDragRange() {
+        return getHeight() - getDraggedViewHeightPlusMarginTop();
     }
 
     /**

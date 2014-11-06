@@ -38,16 +38,16 @@ public abstract class Transformer {
     private final View view;
     private final View parent;
 
-    private float viewHeight;
+    private int viewHeight;
     private float xScaleFactor;
     private float yScaleFactor;
-    private float marginRight;
-    private float marginBottom;
+    private int marginRight;
+    private int marginBottom;
     private int lastTopPosition;
     private int lastLeftPosition;
-    private int lastRightPosition;
-    private float originalHeight;
-    private float originalWidth;
+
+    private int originalHeight;
+    private int originalWidth;
 
     public Transformer(View view, View parent) {
         this.view = view;
@@ -70,23 +70,23 @@ public abstract class Transformer {
         this.yScaleFactor = yScaleFactor;
     }
 
-    public float getMarginRight() {
+    public int getMarginRight() {
         return marginRight;
     }
 
     public void setMarginRight(float marginRight) {
-        this.marginRight = marginRight;
+        this.marginRight = Math.round(marginRight);
     }
 
-    public float getMarginBottom() {
+    public int getMarginBottom() {
         return marginBottom;
     }
 
     public void setMarginBottom(float marginBottom) {
-        this.marginBottom = marginBottom;
+        this.marginBottom = Math.round(marginBottom);
     }
 
-    public float getViewHeight() {
+    public int getViewHeight() {
         return viewHeight < 0f ? view.getMeasuredHeight() : viewHeight;
     }
 
@@ -96,24 +96,13 @@ public abstract class Transformer {
      * @param viewHeight to change..
      */
     public void setViewHeight(float viewHeight) {
-        this.viewHeight = viewHeight;
-        if (viewHeight > 0f) {
-            originalHeight = viewHeight;
+        this.viewHeight = Math.round(viewHeight);
+        if (this.viewHeight > 0) {
+            originalHeight = this.viewHeight;
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
-            layoutParams.height = (int) viewHeight;
+            layoutParams.height = this.viewHeight;
             view.setLayoutParams(layoutParams);
         }
-    }
-
-    public int getLastRightPosition() {
-        if (lastRightPosition <= 0) {
-            lastRightPosition = view.getMeasuredWidth();
-        }
-        return lastRightPosition;
-    }
-
-    public void setLastRightPosition(int lastRightPosition) {
-        this.lastRightPosition = lastRightPosition;
     }
 
     public int getLastTopPosition() {
@@ -151,21 +140,29 @@ public abstract class Transformer {
     /**
      * @return height of the view before it has change the size.
      */
-    public float getOriginalHeight() {
+    public int getOriginalHeight() {
         if (originalHeight == 0) {
             originalHeight = viewHeight < 0 ? view.getMeasuredHeight() : viewHeight;
         }
         return originalHeight;
     }
 
+    public void setOriginalHeight(int originalHeight) {
+        this.originalHeight = originalHeight;
+    }
+
     /**
      * @return width of the view before it has change the size.
      */
-    public float getOriginalWidth() {
+    public int getOriginalWidth() {
         if (originalWidth == 0) {
             originalWidth = view.getMeasuredWidth();
         }
         return originalWidth;
+    }
+
+    public void setOriginalWidth(int originalWidth) {
+        this.originalWidth = originalWidth;
     }
 
     /**
@@ -182,7 +179,9 @@ public abstract class Transformer {
     public boolean isAboveTheMiddle() {
         int parentHeight = parent.getHeight();
         float viewYPosition = ViewHelper.getY(view) + (view.getHeight() * 0.5f);
-        return viewYPosition < (parentHeight * 0.5);
+        float factor = getOriginalHeight() > parentHeight*.75f? .75f : .5f;
+
+        return viewYPosition < (parentHeight * factor);
     }
 
     public abstract boolean isViewAtRight();
@@ -202,6 +201,6 @@ public abstract class Transformer {
     /**
      * @return min possible width, after apply the transformation.
      */
-    public abstract int getMinWidth();
+    public abstract int getMinWidthPlusMargin();
 
 }
