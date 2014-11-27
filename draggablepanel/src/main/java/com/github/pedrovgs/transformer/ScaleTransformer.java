@@ -19,6 +19,7 @@ import android.view.View;
 
 import com.nineoldandroids.view.ViewHelper;
 
+
 /**
  * Transformer extension created to scale the view instead of resize it as the other
  * implementation does. This implementation is based on Nineoldanroids library to scale
@@ -39,7 +40,7 @@ class ScaleTransformer extends Transformer {
      */
     @Override
     public void updateWidth(float verticalDragOffset) {
-        ViewHelper.setScaleX(getView(), 1 - (1 - (1 /  getXScaleFactor())) * verticalDragOffset);
+        ViewHelper.setScaleX(getView(), 1 - verticalDragOffset / getXScaleFactor());
     }
 
     /**
@@ -49,7 +50,7 @@ class ScaleTransformer extends Transformer {
      */
     @Override
     public void updateHeight(float verticalDragOffset) {
-        ViewHelper.setScaleY(getView(), 1 - (1 - (1 /  getYScaleFactor())) * verticalDragOffset);
+        ViewHelper.setScaleY(getView(), 1 - verticalDragOffset / getYScaleFactor());
     }
 
     /**
@@ -119,12 +120,12 @@ class ScaleTransformer extends Transformer {
      */
     @Override
     public int getMinWidthPlusMargin() {
-        return getOriginalWidth();
+        return (int) getOriginalWidth();
     }
-/*
+
     @Override
     public int getLastLeftPosition() {
         return 0;
     }
-*/
+
 }

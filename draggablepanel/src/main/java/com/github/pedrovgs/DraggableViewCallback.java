@@ -27,9 +27,9 @@ import android.view.View;
 class DraggableViewCallback extends ViewDragHelper.Callback {
 
     private static final int MIN_DX = 25;
-    private static final int MIN_DY = 15;
+    private static final int MIN_DY = 20;
     private static final float X_MIN_VELOCITY = 1300;
-    private static final float Y_MIN_VELOCITY = 1300;
+    private static final float Y_MIN_VELOCITY = 800;
 
     private DraggableView draggableView;
     private View draggedView;

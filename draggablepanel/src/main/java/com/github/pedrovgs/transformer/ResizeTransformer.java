@@ -26,7 +26,6 @@ import android.widget.RelativeLayout;
  */
 class ResizeTransformer extends Transformer {
 
-	//this is not needed, I think...
     private int lastHeight;
     private int lastWidth;
 
@@ -43,13 +42,12 @@ class ResizeTransformer extends Transformer {
     public void updateWidth(float verticalDragOffset) {
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getView().getLayoutParams();
 
-        params.width = (int) (getOriginalWidth() - (getOriginalWidth() - (getOriginalWidth() / getXScaleFactor())) * verticalDragOffset);
+        params.width  = (int) (getOriginalWidth() - (getOriginalWidth() - (getOriginalWidth() / getXScaleFactor())) * verticalDragOffset);
         params.height = (int) (getOriginalHeight() - (getOriginalHeight() - (getOriginalHeight() / getYScaleFactor())) * verticalDragOffset);
+        getView().requestLayout();
 
+        lastWidth  = params.width;
         lastHeight = params.height;
-        lastWidth = params.width;
-
-        getView().setLayoutParams(params);
     }
 
     /**
@@ -86,10 +84,10 @@ class ResizeTransformer extends Transformer {
     public void updateXPosition(float verticalDragOffset) {
         int left, top, right, bottom;
 
-        right = getViewRightPosition(verticalDragOffset);
-        left = right-getViewWidth();
-        top = getView().getTop();
-        bottom = top+getViewHeight();
+        right  = getViewRightPosition(verticalDragOffset);
+        left   = right - getViewWidth();
+        top    = getView().getTop();
+        bottom = top + getViewHeight();
 
         setLastLeftPosition(left);
         setLastTopPosition(top);
